@@ -3,7 +3,6 @@ package com.example.noradiegwu.nytsearchapplication.activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -12,6 +11,7 @@ import android.widget.GridView;
 
 import com.example.noradiegwu.nytsearchapplication.Article;
 import com.example.noradiegwu.nytsearchapplication.ArticleArrayAdapter;
+import com.example.noradiegwu.nytsearchapplication.EndlessScrollListener;
 import com.example.noradiegwu.nytsearchapplication.R;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
@@ -42,7 +42,17 @@ public class SearchActivity extends AppCompatActivity {
         //Toolbar toolbar = (Toolbar) findViewById(R.id....)
         //setSupportActionBar(toolbar);
         setUpViews();
+        gvResults.setOnScrollListener(new EndlessScrollListener() {
+            @Override
+            public boolean onLoadMore(int page, int totalItemsCount) {
+                // Triggered only when new data needs to be appended to the list
+                // Add whatever code is needed to append new items to your AdapterView
+                customLoadMoreDataFromApi(page);
+                // or customLoadMoreDataFromApi(totalItemsCount);
+                return true; // ONLY if more data is actually being loaded; false otherwise.
+            }
 
+        });
     }
 
     public void setUpViews() {
@@ -75,8 +85,6 @@ public class SearchActivity extends AppCompatActivity {
     public void onArticleSearch(View view) {
         String query = etQuery.getText().toString();
 
-        //Toast.makeText(this, "Searching for: " + query, Toast.LENGTH_SHORT).show();
-
         AsyncHttpClient client = new AsyncHttpClient();
         String url = "https://api.nytimes.com/svc/search/v2/articlesearch.json";
 
@@ -88,7 +96,6 @@ public class SearchActivity extends AppCompatActivity {
         client.get(url, params, new JsonHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                Log.d("response", response.toString());
                 JSONArray articleJsonResults = null;
 
                 try{
@@ -97,7 +104,7 @@ public class SearchActivity extends AppCompatActivity {
                     // by doing adapter.addAll you still modify the underlying data and adds it to the array list
                     // you simply save a step by not having to notify the adapter
                     // adapter.notifyDataSetChanged();
-                    Log.d("response", articles.toString());
+                   //Log.d("response", articles.toString());
 
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -106,5 +113,39 @@ public class SearchActivity extends AppCompatActivity {
         });
 
 ;    }
+
+    public void customLoadMoreDataFromApi(int offset) {
+        // This method probably sends out a network request and appends new data items to your adapter.
+        // Use the offset value and add it as a parameter to your API request to retrieve paginated data.
+        // Deserialize API response and then construct new objects to append to the adapter
+        String query = etQuery.getText().toString();
+
+        AsyncHttpClient client = new AsyncHttpClient();
+        String url = "https://api.nytimes.com/svc/search/v2/articlesearch.json";
+
+        RequestParams params = new RequestParams();
+        params.put("api-key", "e9eaa94eab9b4156ab10c4acdaf1780c");
+        params.put("page", offset);
+        params.put("q", query);
+
+        client.get(url, params, new JsonHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                JSONArray articleJsonResults = null;
+
+                try{
+                    articleJsonResults = response.getJSONObject("response").getJSONArray("docs");
+                    adapter.addAll(Article.fromJSONArray(articleJsonResults));
+                    // by doing adapter.addAll you still modify the underlying data and adds it to the array list
+                    // you simply save a step by not having to notify the adapter
+                    // adapter.notifyDataSetChanged();
+                    //Log.d("response", articles.toString());
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
 
 }
