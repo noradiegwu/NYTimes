@@ -2,14 +2,17 @@ package com.example.noradiegwu.nytsearchapplication.activity;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SearchView;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.GridView;
 
-import com.example.noradiegwu.nytsearchapplication.Article;
+import com.example.noradiegwu.nytsearchapplication.Models.Article;
 import com.example.noradiegwu.nytsearchapplication.ArticleArrayAdapter;
 import com.example.noradiegwu.nytsearchapplication.EndlessScrollListener;
 import com.example.noradiegwu.nytsearchapplication.R;
@@ -27,8 +30,9 @@ import cz.msebera.android.httpclient.Header;
 
 public class SearchActivity extends AppCompatActivity {
 
-    EditText etQuery;
-    Button btnSearch;
+    //EditText etQuery;
+    //Button btnSearch;
+    String queryText;
     GridView gvResults;
 
     ArrayList<Article> articles;
@@ -39,8 +43,8 @@ public class SearchActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
-        //Toolbar toolbar = (Toolbar) findViewById(R.id....)
-        //setSupportActionBar(toolbar);
+        //Toolbar tbSearch = (Toolbar) findViewById(R.id.tbSearch);
+        //setSupportActionBar(tbSearch);
         setUpViews();
         gvResults.setOnScrollListener(new EndlessScrollListener() {
             @Override
@@ -55,9 +59,82 @@ public class SearchActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.search_menu, menu);
+        final MenuItem searchItem = menu.findItem(R.id.action_search);
+        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+
+
+
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                // perform query here
+
+                queryText = query;
+                AsyncHttpClient client = new AsyncHttpClient();
+                String url = "https://api.nytimes.com/svc/search/v2/articlesearch.json";
+
+                RequestParams params = new RequestParams();
+                params.put("api-key", "e9eaa94eab9b4156ab10c4acdaf1780c");
+                params.put("page", 0);
+                params.put("q", query);
+
+                client.get(url, params, new JsonHttpResponseHandler() {
+                    @Override
+                    public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                        JSONArray articleJsonResults = null;
+
+                        try{
+
+                            // clear array
+                                articles.clear();;
+
+                                articleJsonResults = response.getJSONObject("response").getJSONArray("docs");
+                                adapter.addAll(Article.fromJSONArray(articleJsonResults));
+                                // by doing adapter.addAll you still modify the underlying data and adds it to the array list
+                                // you simply save a step by not having to notify the adapter
+                                // adapter.notifyDataSetChanged();
+                                //Log.d("response", articles.toString());
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+
+                // workaround to avoid issues with some emulators and keyboard devices firing twice if a keyboard enter is used
+                // see https://code.google.com/p/android/issues/detail?id=24599
+                searchView.clearFocus();
+
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        int id = item.getItemId();
+        if (id == R.id.menu_item_filter) {
+            startActivity(new Intent(getApplicationContext(), FilterActivity.class));
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
     public void setUpViews() {
-        etQuery = (EditText) findViewById(R.id.etQuery);
-        btnSearch = (Button) findViewById(R.id.btnSearch);
+        //etQuery = (EditText) findViewById(R.id.etQuery);
+        //btnSearch = (Button) findViewById(R.id.btnSearch);
         gvResults = (GridView) findViewById(R.id.gvResults);
         articles = new ArrayList<>();
         adapter = new ArticleArrayAdapter(this, articles);
@@ -82,43 +159,13 @@ public class SearchActivity extends AppCompatActivity {
             // ButterKnife.bind(this);
     }
 
-    public void onArticleSearch(View view) {
-        String query = etQuery.getText().toString();
 
-        AsyncHttpClient client = new AsyncHttpClient();
-        String url = "https://api.nytimes.com/svc/search/v2/articlesearch.json";
-
-        RequestParams params = new RequestParams();
-        params.put("api-key", "e9eaa94eab9b4156ab10c4acdaf1780c");
-        params.put("page", 0);
-        params.put("q", query);
-
-        client.get(url, params, new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                JSONArray articleJsonResults = null;
-
-                try{
-                    articleJsonResults = response.getJSONObject("response").getJSONArray("docs");
-                    adapter.addAll(Article.fromJSONArray(articleJsonResults));
-                    // by doing adapter.addAll you still modify the underlying data and adds it to the array list
-                    // you simply save a step by not having to notify the adapter
-                    // adapter.notifyDataSetChanged();
-                   //Log.d("response", articles.toString());
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-
-;    }
 
     public void customLoadMoreDataFromApi(int offset) {
         // This method probably sends out a network request and appends new data items to your adapter.
         // Use the offset value and add it as a parameter to your API request to retrieve paginated data.
         // Deserialize API response and then construct new objects to append to the adapter
-        String query = etQuery.getText().toString();
+        //String query = etQuery.getText().toString();
 
         AsyncHttpClient client = new AsyncHttpClient();
         String url = "https://api.nytimes.com/svc/search/v2/articlesearch.json";
@@ -126,7 +173,7 @@ public class SearchActivity extends AppCompatActivity {
         RequestParams params = new RequestParams();
         params.put("api-key", "e9eaa94eab9b4156ab10c4acdaf1780c");
         params.put("page", offset);
-        params.put("q", query);
+        params.put("q", queryText);
 
         client.get(url, params, new JsonHttpResponseHandler() {
             @Override

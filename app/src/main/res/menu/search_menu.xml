@@ -2,6 +2,7 @@
 
     <menu xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto" >
+
         <item android:id="@+id/action_search"
             android:orderInCategory="5"
             android:title="Search"
@@ -9,5 +10,18 @@
             app:showAsAction="ifRoom|collapseActionView"
             app:actionViewClass="android.support.v7.widget.SearchView" />
 
-    </menu>
+        <item
+            android:id="@+id/menu_item_share"
+            app:showAsAction="ifRoom"
+            android:title="Share"
+            app:actionProviderClass="android.support.v7.widget.ShareActionProvider" />
+
+        <item
+            android:id="@+id/menu_item_filter"
+            android:title="Filter"
+            android:icon="@drawable/ic_filter"
+            app:showAsAction="ifRoom"
+            />
+
+</menu>
 

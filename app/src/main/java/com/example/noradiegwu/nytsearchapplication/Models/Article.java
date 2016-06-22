@@ -1,4 +1,4 @@
-package com.example.noradiegwu.nytsearchapplication;
+package com.example.noradiegwu.nytsearchapplication.Models;
 
 import org.json.JSONArray;
 import org.json.JSONException;
