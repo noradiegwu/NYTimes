@@ -14,7 +14,11 @@ import android.webkit.WebViewClient;
 import com.example.noradiegwu.nytsearchapplication.Models.Article;
 import com.example.noradiegwu.nytsearchapplication.R;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 public class ArticleActivity extends AppCompatActivity {
+    @BindView(R.id.wvArticle) WebView wvArticle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,9 +28,11 @@ public class ArticleActivity extends AppCompatActivity {
         setContentView(R.layout.activity_article);
         Article article = (Article) getIntent().getSerializableExtra("article");
 
-        WebView webView = (WebView) findViewById(R.id.wvArticle);
+        //WebView webView = (WebView) findViewById(R.id.wvArticle);
 
-        webView.setWebViewClient(new WebViewClient() {
+        ButterKnife.bind(this);
+
+        wvArticle.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 view.loadUrl(url);
@@ -34,9 +40,7 @@ public class ArticleActivity extends AppCompatActivity {
             }
         });
 
-        webView.loadUrl(article.getWebUrl());
-
-
+        wvArticle.loadUrl(article.getWebUrl());
 
     }
 
@@ -54,7 +58,9 @@ public class ArticleActivity extends AppCompatActivity {
         // get reference to WebView
         WebView wvArticle = (WebView) findViewById(R.id.wvArticle);
         // pass in the URL currently being used by the WebView
-        shareIntent.putExtra(Intent.EXTRA_TEXT, wvArticle.getUrl());
+        if (wvArticle != null) {
+            shareIntent.putExtra(Intent.EXTRA_TEXT, wvArticle.getUrl());
+        }
 
         miShare.setShareIntent(shareIntent);
         return super.onCreateOptionsMenu(menu);

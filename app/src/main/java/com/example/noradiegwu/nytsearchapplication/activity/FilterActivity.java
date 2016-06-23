@@ -19,16 +19,20 @@ import org.parceler.Parcels;
 
 import java.util.Calendar;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 public class FilterActivity extends AppCompatActivity implements DatePickerDialog.OnDateSetListener {
 
-    EditText etBeginDate;
-    EditText etEndDate;
-    RadioButton rbtnNewest;
-    RadioButton rbtnOldest;
-    CheckBox cbSports;
-    CheckBox cbArts;
-    CheckBox cbFashionandStyle;
-    Button btnFilter;
+    // Butterknife views
+    @BindView(R.id.etBeginDate) EditText etBeginDate;
+    @BindView(R.id.etEndDate) EditText etEndDate;
+    @BindView(R.id.rbtnNewest) RadioButton rbtnNewest;
+    @BindView(R.id.rbtnOldest) RadioButton rbtnOldest;
+    @BindView(R.id.cbSports) CheckBox cbSports;
+    @BindView(R.id.cbArts) CheckBox cbArts;
+    @BindView(R.id.cbFashionandStyle) CheckBox cbFashionandStyle;
+    @BindView(R.id.btnFilter) Button btnFilter;
     String date;
     String viewDate;
     String month;
@@ -36,11 +40,13 @@ public class FilterActivity extends AppCompatActivity implements DatePickerDialo
     final Filter filter = new Filter();
 
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_filter);
-        setUpViews();
+        ButterKnife.bind(this);
+        //setUpViews();
 
 
         // Sort click listeners
@@ -80,23 +86,35 @@ public class FilterActivity extends AppCompatActivity implements DatePickerDialo
         });
 
 
-        // News Desk click listeners
+        // News Desk checkbox click listeners
         cbSports.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                filter.sports = true;
+                boolean checked = ((CheckBox) v).isChecked();
+                if(checked) { // if the box if checked
+                    filter.sports = true; // set the filter value to true (which, in filter model, adds the correct string to the array)
+                } else { filter.sports = false; } // else, (if it is ever checked then unchecked or never checked at all)
+                // set to false
             }
         });
         cbArts.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                filter.arts = true;
+                boolean checked = ((CheckBox) v).isChecked();
+                if(checked) { // if the box if checked
+                    filter.arts = true; // set the filter value to true (which, in filter model, adds the correct string to the array)
+                } else { filter.arts = false; } // else, (if it is ever checked then unchecked or never checked at all)
+                // set to false
             }
         });
         cbFashionandStyle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                filter.fashion_and_style = true;
+                boolean checked = ((CheckBox) v).isChecked();
+                if(checked) { // if the box if checked
+                    filter.fashion_and_style = true; // set the filter value to true (which, in filter model, adds the correct string to the array)
+                } else { filter.fashion_and_style = false; } // else, (if it is ever checked then unchecked or never checked at all)
+                // set to false
             }
         });
 
@@ -104,10 +122,17 @@ public class FilterActivity extends AppCompatActivity implements DatePickerDialo
         btnFilter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                ///// construct news_desk /////
+                filter.constructNewsDeskArray(); // at this time the array is created
+                String newsDeskItemsStr = "";
+                if(filter.newsDeskItems.size() > 0) { // if the array has anything in it (any boxes were checked at the time of "apply" button click)
+                    newsDeskItemsStr = android.text.TextUtils.join(" ", filter.newsDeskItems); // join the params together w/ a space in b/w
+                    filter.newsDeskParamValue = String.format("news_desk:(%s)", newsDeskItemsStr); // set the param string value in the filter
+                    // this is to use when the filter is passed into the search activity
+                }
+
                 Intent data = new Intent();
                 data.putExtra("filter", Parcels.wrap(filter));
-                data.putExtra("begin_date", Parcels.wrap(filter.begin_date));
-                data.putExtra("end_date", Parcels.wrap(filter.end_date));
                 setResult(RESULT_OK, data);
                 finish();
             }
@@ -115,16 +140,24 @@ public class FilterActivity extends AppCompatActivity implements DatePickerDialo
 
     }
 
-    private void setUpViews() {
+    /* private void setUpViews() {
         etBeginDate = (EditText) findViewById(R.id.etBeginDate);
+        // @BindView(R.id.etBeginDate) EditText etBeginDate;
         etEndDate = (EditText) findViewById(R.id.etEndDate);
+        // @BindView(R.id.etEndDate) EditText etEndDate;
         rbtnNewest = (RadioButton) findViewById(R.id.rbtnNewest);
+        // @BindView(R.id.rbtnNewest) RadioButton rbtnNewest;
         rbtnOldest = (RadioButton) findViewById(R.id.rbtnOldest);
+        // @BindView(R.id.rbtnOldest) RadioButton rbtnOldest;
         cbSports = (CheckBox) findViewById(R.id.cbSports);
+        // @BindView(R.id.cbSports) CheckBox cbSports;
         cbArts = (CheckBox) findViewById(R.id.cbArts);
+        // @BindView(R.id.cbArts) CheckBox cbArts;
         cbFashionandStyle = (CheckBox) findViewById(R.id.cbFashionandStyle);
+        // @BindView(R.id.cbFashionandStyle) CheckBox cbFashionandStyle;
         btnFilter = (Button) findViewById(R.id.btnFilter);
-    }
+        // @BindView(R.id.btnFilter) Button btnFilter;
+    } */
 
     public void showDatePickerDialog(View v) {
         DatePickerFragment newFragment = new DatePickerFragment();

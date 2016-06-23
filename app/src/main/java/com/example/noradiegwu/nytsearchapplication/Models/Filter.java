@@ -2,14 +2,16 @@ package com.example.noradiegwu.nytsearchapplication.Models;
 
 import org.parceler.Parcel;
 
+import java.util.ArrayList;
+
 @Parcel
 public class Filter {
 
     public boolean old_to_new;
     public boolean new_to_old;
-    public boolean arts;
-    public boolean fashion_and_style;
-    public boolean sports;
+    public boolean arts = false;
+    public boolean fashion_and_style = false;
+    public boolean sports = false;
     public boolean begin = false;
     public boolean end = false;
     public String begin_date;
@@ -18,8 +20,19 @@ public class Filter {
     public String OLDEST = "oldest";
     public String SPORTS_STRING = "\"Sports\"";
     public String ARTS_STRING = "\"Arts\"";
-    public String FASHION_STRING = "\"Fashion & Style\""; // need proper form/string
+    public String FASHION_STRING = "\"Fashion & Style\"";
+    public String newsDeskParamValue = "";
     private String EMPTY_STRING = "";
+    public ArrayList<String> newsDeskItems = new ArrayList<>();
+
+    /*
+
+    String newsDeskItemsStr =
+            android.text.TextUtils.join(" ", newsDeskItems);
+    String newsDeskParamValue =
+            String.format("news_desk:(%s)", newsDeskItemsStr);
+    */
+
 
     public Filter() {
     }
@@ -37,24 +50,28 @@ public class Filter {
         else { return EMPTY_STRING; } //cause issues?
     }
 
-    public String getSportsString() {
+    // News desk methods //
+    //////////////////////
+    public void constructNewsDeskArray() { // no need to check to remove values on the chance the user's mind is changed,
+        // because this is only called when the "apply" filter button is clicked
         if(isSports()) {
-            return SPORTS_STRING;
-        } else { return EMPTY_STRING;}
-    }
+            newsDeskItems.add(SPORTS_STRING);
+        } //else { newsDeskItems.remove(SPORTS_STRING); }
 
-    public String getArtsString() {
         if(isArts()) {
-            return ARTS_STRING;
-        } else { return EMPTY_STRING;}
+            newsDeskItems.add(ARTS_STRING);
+        } //else { newsDeskItems.remove(ARTS_STRING); }
+
+        if(isFashion_and_style()) {
+            newsDeskItems.add(FASHION_STRING);
+        } // else { newsDeskItems.remove(FASHION_STRING);}
     }
 
-    public String getFashionString() {
-        if(isFashion_and_style()) {
-            return FASHION_STRING;
-        } else { return EMPTY_STRING;}
-    } // need proper form/string
+    public String getNewsDeskParamValue() {
+        return newsDeskParamValue;
+    }
 
+    // DAte methods
 
     public String getBeginString() {
         if(isBegin()) {

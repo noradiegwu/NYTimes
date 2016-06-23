@@ -29,13 +29,16 @@ import org.parceler.Parcels;
 
 import java.util.ArrayList;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import cz.msebera.android.httpclient.Header;
 
 public class SearchActivity extends AppCompatActivity {
 
     String queryText;
     int offsetNum;
-    GridView gvResults;
+    //GridView gvResults;
+    @BindView(R.id.gvResults) GridView gvResults;
     int FILTER_REQUEST_CODE = 155;
     private Filter filtered;
 
@@ -47,9 +50,11 @@ public class SearchActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
+        ButterKnife.bind(this);
         //Toolbar tbSearch = (Toolbar) findViewById(R.id.tbSearch);
         //setSupportActionBar(tbSearch);
         setUpViews();
+
         gvResults.setOnScrollListener(new EndlessScrollListener() {
             @Override
             public boolean onLoadMore(int page, int totalItemsCount) {
@@ -133,7 +138,7 @@ public class SearchActivity extends AppCompatActivity {
 
 
     public void setUpViews() {
-        gvResults = (GridView) findViewById(R.id.gvResults);
+        //gvResults = (GridView) findViewById(R.id.gvResults);
         articles = new ArrayList<>();
         adapter = new ArticleArrayAdapter(this, articles);
         gvResults.setAdapter(adapter);
@@ -219,32 +224,9 @@ public class SearchActivity extends AppCompatActivity {
 
     }
 
-
-    // default params applied with original query
-/*    public RequestParams defaultParams (String query) {
-        RequestParams params = new RequestParams();
-        params.put("api-key", "e9eaa94eab9b4156ab10c4acdaf1780c");
-        params.put("page", 0);
-        params.put("q", query);
-        return params;
-
-    }*/
-
-    // default params applied with original query and necessary offset
-/*    public RequestParams defaultInfScrollParams(int offset) {
-        RequestParams params = new RequestParams();
-        params.put("api-key", "e9eaa94eab9b4156ab10c4acdaf1780c");
-        params.put("page", offset);
-        params.put("q", queryText);
-        return params;
-    }*/
-
-
     public RequestParams createRequestParams(String query, Filter filter, int pageNum) { // issue with infinite scroll
         // use String query as incoming parameter
         String EMPTY_STRING = "";
-
-        //RequestParams params = defaultParams(query);
 
         RequestParams params = new RequestParams();
 
@@ -262,13 +244,7 @@ public class SearchActivity extends AppCompatActivity {
             String beginDate = filter.getBeginString();
             String endDate = filter.getEndString();
             String sort = filter.getSort();
-            String newsDeskSports = filter.getSportsString();
-            String newsDeskArts = filter.getArtsString();
-            String newsDeskFashion = filter.getFashionString();
-            String SPORTS;
-            String ARTS;
-            String FASHION;
-            String newsDesk;
+            String newsDesk = filter.getNewsDeskParamValue(); // the entire perfect param string is equal to newsDesk
 
             // Set date params
             if (!(beginDate.equals(EMPTY_STRING))) {
@@ -283,38 +259,11 @@ public class SearchActivity extends AppCompatActivity {
                 params.put("sort", sort);
             }
 
-            if(!(newsDeskSports.equals(EMPTY_STRING)) || !(newsDeskArts.equals(EMPTY_STRING)) || !(newsDeskFashion.equals(EMPTY_STRING))) {
-                // if any on the values are selected
-                if (!(newsDeskSports.equals(EMPTY_STRING))) {
-
-                } else {  }
-
-                if (!(newsDeskArts.equals(EMPTY_STRING))) {
-
-                } else {  }
-
-                if (!(newsDeskFashion.equals(EMPTY_STRING))) {
-
-                } else {  }
+            // set news_desk params
+            if(filter.newsDeskItems.size() > 0) { // array is not empty
+                // apply the parameter
+                params.put("fq", newsDesk);
             }
-            /*// set news_desk params
-            if (!(newsDeskSports.equals(EMPTY_STRING))) {
-                SPORTS = ;
-            } else {  }
-                // set news_desk to have sports
-
-            if (!(newsDeskArts.equals(EMPTY_STRING))) {
-                // set news_desk to have arts
-                ARTS = newsDeskArts;
-            }
-
-            if (!(newsDeskFashion.equals(EMPTY_STRING))) {
-                // set news_desk to have fashion
-                FASHION = newsDeskFashion;
-
-            }*/
-
-            //params.put("fq", newsDesk);
         }
 
         return params;
