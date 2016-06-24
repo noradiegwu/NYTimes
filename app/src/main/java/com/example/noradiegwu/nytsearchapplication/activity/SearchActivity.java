@@ -4,18 +4,19 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
+import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.GridView;
 import android.widget.Toast;
 
-import com.example.noradiegwu.nytsearchapplication.ArticleArrayAdapter;
-import com.example.noradiegwu.nytsearchapplication.EndlessScrollListener;
+import com.example.noradiegwu.nytsearchapplication.ArticlesRecyclerAdapter;
+import com.example.noradiegwu.nytsearchapplication.EndlessRecyclerViewScrollListener;
+import com.example.noradiegwu.nytsearchapplication.ItemClickSupport;
 import com.example.noradiegwu.nytsearchapplication.Models.Article;
 import com.example.noradiegwu.nytsearchapplication.Models.Filter;
 import com.example.noradiegwu.nytsearchapplication.R;
@@ -30,8 +31,6 @@ import org.parceler.Parcels;
 
 import java.util.ArrayList;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
 import cz.msebera.android.httpclient.Header;
 
 public class SearchActivity extends AppCompatActivity {
@@ -39,21 +38,22 @@ public class SearchActivity extends AppCompatActivity {
     String queryText;
     int offsetNum;
     //GridView gvResults;
-    @BindView(R.id.gvResults) GridView gvResults;
+    //@BindView(R.id.gvResults) GridView gvResults;
     int FILTER_REQUEST_CODE = 155;
     //private Filter filtered;
     private Filter filter = new Filter();
 
 
     ArrayList<Article> articles;
-    ArticleArrayAdapter adapter;
+    ArticlesRecyclerAdapter adapter;
+
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
-        ButterKnife.bind(this);
+        //ButterKnife.bind(this);
 
         RequestParams params = createRequestParams(null, filter, 0);
 
@@ -65,12 +65,67 @@ public class SearchActivity extends AppCompatActivity {
         // Make sure the toolbar exists in the activity and is not null
         setSupportActionBar(toolbar);
 
-        setUpViews();
+        articles = new ArrayList<>();
+        //adapter = new ArticleArrayAdapter(this, articles);
+        //gvResults.setAdapter(adapter);
 
-        // hook up listener for grid click
-        gvResults.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        ////////////////////////
+        RecyclerView rvArticles = (RecyclerView) findViewById(R.id.rvArticles); // why is this null?
+
+        // Create adapter passing in the sample user data
+        adapter = new ArticlesRecyclerAdapter(this, articles);
+        // Initialize articles
+
+        AsyncHttpClient client = new AsyncHttpClient();
+        String topURL = "https://api.nytimes.com/svc/topstories/v2/home.json";
+
+        params.put("api-key", "e9eaa94eab9b4156ab10c4acdaf1780c");
+
+        // different url for top stories
+        // if query is null, use top stories url
+        // else, clear top stories and use query
+
+        client.get(topURL, params, new JsonHttpResponseHandler() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                JSONArray articleJsonResults = null;
+
+                try {
+                    articleJsonResults = response.getJSONArray("results");
+                    articles.addAll(Article.fromJSONArray(articleJsonResults));
+                    adapter.notifyDataSetChanged();
+                    // by doing adapter.addAll you still modify the underlying data and adds it to the array list
+                    // you simply save a step by not having to notify the adapter
+                    // adapter.notifyDataSetChanged();
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+
+        // Attach the adapter to the recyclerview to populate items
+        rvArticles.setAdapter(adapter);
+        // First param is number of columns and second param is orientation i.e Vertical or Horizontal
+        StaggeredGridLayoutManager gridLayoutManager =
+                new StaggeredGridLayoutManager(4, StaggeredGridLayoutManager.VERTICAL);
+// Attach the layout manager to the recycler view
+        rvArticles.setLayoutManager(gridLayoutManager);
+
+        //rvArticles.setLayoutManager(new LinearLayoutManager(this)); // change to staggered grid
+
+        //////////////////////////
+
+        //setUpViews();
+
+
+        //////////////////////////////
+        // click support
+
+        ItemClickSupport.addTo(rvArticles).setOnItemClickListener(new ItemClickSupport.OnItemClickListener() {
+            @Override
+            public void onItemClicked(RecyclerView recyclerView, int position, View v) {
                 // create an intent to display the article
                 Intent intent = new Intent(getApplicationContext(), ArticleActivity.class);
                 // get the article I want to display
@@ -82,8 +137,39 @@ public class SearchActivity extends AppCompatActivity {
             }
         });
 
+        // Add the scroll listener
+        rvArticles.addOnScrollListener(new EndlessRecyclerViewScrollListener(gridLayoutManager) {
+            @Override
+            public void onLoadMore(int page, int totalItemsCount) {
+                // Triggered only when new data needs to be appended to the list
+                // Add whatever code is needed to append new items to the bottom of the list
+                customLoadMoreDataFromApi(page);
+            }
+        });
+    }
+        ////////////////////////////
+
+
+
+
+
+        // hook up listener for grid click
+        /* gvResults.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                // create an intent to display the article
+                Intent intent = new Intent(getApplicationContext(), ArticleActivity.class);
+                // get the article I want to display
+                Article article = articles.get(position);
+                // pass in the article to the intent
+                intent.putExtra("article", Parcels.wrap(article));
+                // launch article activity
+                startActivity(intent);
+            }
+        }); */
+
         // hook up listener for scrolls
-        gvResults.setOnScrollListener(new EndlessScrollListener() {
+        /* gvResults.setOnScrollListener(new EndlessScrollListener() {
             @Override
             public boolean onLoadMore(int page, int totalItemsCount) {
                 // Triggered only when new data needs to be appended to the list
@@ -96,15 +182,13 @@ public class SearchActivity extends AppCompatActivity {
             }
 
         });
-    }
+    }*/
 
     public void fetchTopStories(RequestParams params) {
         AsyncHttpClient client = new AsyncHttpClient();
         String topURL = "https://api.nytimes.com/svc/topstories/v2/home.json";
 
         params.put("api-key", "e9eaa94eab9b4156ab10c4acdaf1780c");
-        //params.put("page", );
-        //params.put("q", ""); */
 
         // different url for top stories
         // if query is null, use top stories url
@@ -117,7 +201,8 @@ public class SearchActivity extends AppCompatActivity {
 
                 try{
                     articleJsonResults = response.getJSONArray("results");
-                    adapter.addAll(Article.fromJSONArray(articleJsonResults));
+                    articles.addAll(Article.fromJSONArray(articleJsonResults));
+                    adapter.notifyDataSetChanged();
                     // by doing adapter.addAll you still modify the underlying data and adds it to the array list
                     // you simply save a step by not having to notify the adapter
                     // adapter.notifyDataSetChanged();
@@ -147,7 +232,8 @@ public class SearchActivity extends AppCompatActivity {
 
                 try{
                     articleJsonResults = response.getJSONObject("response").getJSONArray("docs");
-                    adapter.addAll(Article.fromJSONArray(articleJsonResults));
+                    articles.addAll(Article.fromJSONArray(articleJsonResults));
+                    adapter.notifyDataSetChanged();
                     // by doing adapter.addAll you still modify the underlying data and adds it to the array list
                     // you simply save a step by not having to notify the adapter
                     // adapter.notifyDataSetChanged();
@@ -178,7 +264,8 @@ public class SearchActivity extends AppCompatActivity {
 
                 //If I do not want to apply any filters from the beginning, I should simply call the default params on my query
                 // clear articles
-                adapter.clear();
+                articles.clear();
+                adapter.notifyDataSetChanged();
 
                 RequestParams params = createRequestParams(query, null, 0);
 
@@ -203,11 +290,11 @@ public class SearchActivity extends AppCompatActivity {
     }
 
 
-    public void setUpViews() {
+    /* public void setUpViews() {
         articles = new ArrayList<>();
         adapter = new ArticleArrayAdapter(this, articles);
         gvResults.setAdapter(adapter);
-    }
+    } */
 
 
     // Used for infinite scroll
@@ -256,7 +343,8 @@ public class SearchActivity extends AppCompatActivity {
 
                 // When the activity comes back, I want to "refresh" the whole screen and run query/client with filters set. So I should:
                 // 1. clear the adapter
-                adapter.clear();
+                articles.clear();
+                adapter.notifyDataSetChanged();
 
                 // 2. getintent
                 filter = Parcels.unwrap(data.getParcelableExtra("filter"));

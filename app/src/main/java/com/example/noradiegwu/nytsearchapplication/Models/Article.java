@@ -32,7 +32,7 @@ public class Article {
     public Article(JSONObject jsonObject) {
         try {
             // if statements
-            if(jsonObject.has("headline")) { // if normal articlesearch api
+            if(jsonObject.has("headline")) { // if normal articleSearch api
                 this.webUrl = jsonObject.getString("web_url");
                 this.headline = jsonObject.getJSONObject("headline").getString("main");
 
