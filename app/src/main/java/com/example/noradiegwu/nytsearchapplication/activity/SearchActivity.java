@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
+import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -40,7 +41,9 @@ public class SearchActivity extends AppCompatActivity {
     //GridView gvResults;
     @BindView(R.id.gvResults) GridView gvResults;
     int FILTER_REQUEST_CODE = 155;
-    private Filter filtered;
+    //private Filter filtered;
+    private Filter filter = new Filter();
+
 
     ArrayList<Article> articles;
     ArticleArrayAdapter adapter;
@@ -51,16 +54,43 @@ public class SearchActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
         ButterKnife.bind(this);
-        //Toolbar tbSearch = (Toolbar) findViewById(R.id.tbSearch);
-        //setSupportActionBar(tbSearch);
+
+        RequestParams params = createRequestParams(null, filter, 0);
+
+        fetchTopStories(params);
+
+        // Find the toolbar view inside the activity layout
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        // Sets the Toolbar to act as the ActionBar for this Activity window.
+        // Make sure the toolbar exists in the activity and is not null
+        setSupportActionBar(toolbar);
+
         setUpViews();
 
+        // hook up listener for grid click
+        gvResults.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                // create an intent to display the article
+                Intent intent = new Intent(getApplicationContext(), ArticleActivity.class);
+                // get the article I want to display
+                Article article = articles.get(position);
+                // pass in the article to the intent
+                intent.putExtra("article", Parcels.wrap(article));
+                // launch article activity
+                startActivity(intent);
+            }
+        });
+
+        // hook up listener for scrolls
         gvResults.setOnScrollListener(new EndlessScrollListener() {
             @Override
             public boolean onLoadMore(int page, int totalItemsCount) {
                 // Triggered only when new data needs to be appended to the list
                 // Add whatever code is needed to append new items to your AdapterView
-                customLoadMoreDataFromApi(page);
+                if(queryText != null) {
+                    customLoadMoreDataFromApi(page);
+                }
                 // or customLoadMoreDataFromApi(totalItemsCount);
                 return true; // ONLY if more data is actually being loaded; false otherwise.
             }
@@ -68,10 +98,46 @@ public class SearchActivity extends AppCompatActivity {
         });
     }
 
+    public void fetchTopStories(RequestParams params) {
+        AsyncHttpClient client = new AsyncHttpClient();
+        String topURL = "https://api.nytimes.com/svc/topstories/v2/home.json";
+
+        params.put("api-key", "e9eaa94eab9b4156ab10c4acdaf1780c");
+        //params.put("page", );
+        //params.put("q", ""); */
+
+        // different url for top stories
+        // if query is null, use top stories url
+        // else, clear top stories and use query
+
+        client.get(topURL, params, new JsonHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
+                JSONArray articleJsonResults = null;
+
+                try{
+                    articleJsonResults = response.getJSONArray("results");
+                    adapter.addAll(Article.fromJSONArray(articleJsonResults));
+                    // by doing adapter.addAll you still modify the underlying data and adds it to the array list
+                    // you simply save a step by not having to notify the adapter
+                    // adapter.notifyDataSetChanged();
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+    }
+
     public void fetchArticles(RequestParams params) {
 
         AsyncHttpClient client = new AsyncHttpClient();
         String url = "https://api.nytimes.com/svc/search/v2/articlesearch.json";
+
+        // different url for top stories
+        // if query is null, use top stories url
+        // else, clear top stories and use query
 
 
         client.get(url, params, new JsonHttpResponseHandler() {
@@ -138,28 +204,9 @@ public class SearchActivity extends AppCompatActivity {
 
 
     public void setUpViews() {
-        //gvResults = (GridView) findViewById(R.id.gvResults);
         articles = new ArrayList<>();
         adapter = new ArticleArrayAdapter(this, articles);
         gvResults.setAdapter(adapter);
-
-        // hook up listener for grid click
-        gvResults.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                // create an intent to display the article
-                Intent intent = new Intent(getApplicationContext(), ArticleActivity.class);
-                // get the article I want to display
-                Article article = articles.get(position);
-                // pass in the article to the intent
-                intent.putExtra("article", article);
-                // launch article activity
-                startActivity(intent);
-            }
-        });
-        // add butterknife later:
-            // @BindView(R.id.lvMovies) EditText etQuery etc.
-            // ButterKnife.bind(this);
     }
 
 
@@ -174,7 +221,7 @@ public class SearchActivity extends AppCompatActivity {
         offsetNum = offset;
 
         // normal infScroll should happen here
-        RequestParams params = createRequestParams(queryText, filtered, offset); // how do I use my filter from result?
+        RequestParams params = createRequestParams(queryText, filter, offset); // how do I use my filter from result?
         // issue with infinite scroll because infScroll does not have a filter/cannot grab THE filter so new articles lose filtering
 
         fetchArticles(params);
@@ -191,6 +238,7 @@ public class SearchActivity extends AppCompatActivity {
         int id = item.getItemId();
         if (id == R.id.menu_item_filter) {
             Intent filterI = new Intent(getApplicationContext(), FilterActivity.class);
+            filterI.putExtra("filter", Parcels.wrap(filter));
             startActivityForResult(filterI, FILTER_REQUEST_CODE);
             return true;
         }
@@ -211,10 +259,10 @@ public class SearchActivity extends AppCompatActivity {
                 adapter.clear();
 
                 // 2. getintent
-                filtered = Parcels.unwrap(data.getParcelableExtra("filter"));
+                filter = Parcels.unwrap(data.getParcelableExtra("filter"));
 
                 // 3. request params
-                RequestParams params = createRequestParams(queryText, filtered, 0);
+                RequestParams params = createRequestParams(queryText, filter, 0);
 
                 // 4. run the client again with both orig query and new filter params --> fetchArticles(params)
                 fetchArticles(params);
@@ -269,52 +317,6 @@ public class SearchActivity extends AppCompatActivity {
         return params;
 
     }
-
-
-/*    public RequestParams infScrollFilter(int offset) {
-
-        // use String query as incoming parameter
-        String emp = "";
-        String beginDate = filter.getBeginString();
-        String endDate = Filter.getEndString();
-        String sort = Filter.getSort();
-        String newsDeskSports = Filter.getSportsString();
-        String newsDeskArts = Filter.getArtsString();
-        String newsDeskFashion = Filter.getFashionString();
-
-        RequestParams params = defaultInfScrollParams(offset);
-
-
-        // Set date params
-        if (!beginDate.equals(emp)) {
-            params.put("begin_date", beginDate);
-        }
-        if (!endDate.equals(emp)) {
-            params.put("end_date", endDate);
-        }
-
-        // Set sort params
-        if (!sort.equals(emp)) {
-            params.put("sort", sort);
-        }
-
-        // set news_desk params
-        if (!newsDeskSports.equals(emp)) {
-            // set news_desk to have sports
-        }
-
-        if (!newsDeskArts.equals(emp)) {
-            // set news_desk to have arts
-        }
-
-        if (!newsDeskFashion.equals(emp)) {
-            // set news_desk to have fashion
-        }
-
-        return params;
-
-    }*/
-
 
 
 }

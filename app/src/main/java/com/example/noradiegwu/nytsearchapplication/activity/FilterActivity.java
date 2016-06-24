@@ -37,17 +37,39 @@ public class FilterActivity extends AppCompatActivity implements DatePickerDialo
     String viewDate;
     String month;
     String day;
-    final Filter filter = new Filter();
+    Filter filter;
 
+    //final Filter filter = getIntent().getParcelableExtra("filter");
+    // can't get a null parcelable extra
+    //final Filter filter = new Filter();
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_filter);
+        filter = Parcels.unwrap(getIntent().getParcelableExtra("filter"));
         ButterKnife.bind(this);
-        //setUpViews();
 
+     //check the values of the checks and radio buttons and toggle them when it comes back if nec.
+        // if arts was checked, set it to appear checked, else make sure it doesnt appear checked
+        if(filter.isArts()) {
+            cbArts.setChecked(true);
+        } else { cbArts.setChecked(false); }
+        // if sports was checked, set it to appear checked, else make sure it doesnt appear checked
+        if(filter.isSports()) {
+            cbSports.setChecked(true);
+        } else { cbSports.setChecked(false); }
+        // if fashion was checked, set it to appear checked, else make sure it doesnt appear checked
+        if(filter.isFashion_and_style()) {
+            cbFashionandStyle.setChecked(true);
+        } else { cbFashionandStyle.setChecked(false); }
+        // if filter is set new to old, toggle that rbtn, else if it is old to new, toggle that one
+        if(filter.isNew_to_old()) {
+            rbtnNewest.toggle();
+        } else if (filter.isOld_to_new()) {
+            rbtnOldest.toggle();
+        }
 
         // Sort click listeners
         rbtnNewest.setOnClickListener(new View.OnClickListener() {
@@ -101,9 +123,13 @@ public class FilterActivity extends AppCompatActivity implements DatePickerDialo
             @Override
             public void onClick(View v) {
                 boolean checked = ((CheckBox) v).isChecked();
-                if(checked) { // if the box if checked
-                    filter.arts = true; // set the filter value to true (which, in filter model, adds the correct string to the array)
-                } else { filter.arts = false; } // else, (if it is ever checked then unchecked or never checked at all)
+                //if(filter != null) {
+                    if (checked) { // if the box if checked
+                        filter.arts = true; // set the filter value to true (which, in filter model, adds the correct string to the array)
+                    } else {
+                        filter.arts = false;
+                    }
+                //}// else, (if it is ever checked then unchecked or never checked at all)
                 // set to false
             }
         });
@@ -131,7 +157,7 @@ public class FilterActivity extends AppCompatActivity implements DatePickerDialo
                     // this is to use when the filter is passed into the search activity
                 }
 
-                Intent data = new Intent();
+                Intent data = new Intent(); // should I be starting a new intent?
                 data.putExtra("filter", Parcels.wrap(filter));
                 setResult(RESULT_OK, data);
                 finish();
@@ -140,24 +166,6 @@ public class FilterActivity extends AppCompatActivity implements DatePickerDialo
 
     }
 
-    /* private void setUpViews() {
-        etBeginDate = (EditText) findViewById(R.id.etBeginDate);
-        // @BindView(R.id.etBeginDate) EditText etBeginDate;
-        etEndDate = (EditText) findViewById(R.id.etEndDate);
-        // @BindView(R.id.etEndDate) EditText etEndDate;
-        rbtnNewest = (RadioButton) findViewById(R.id.rbtnNewest);
-        // @BindView(R.id.rbtnNewest) RadioButton rbtnNewest;
-        rbtnOldest = (RadioButton) findViewById(R.id.rbtnOldest);
-        // @BindView(R.id.rbtnOldest) RadioButton rbtnOldest;
-        cbSports = (CheckBox) findViewById(R.id.cbSports);
-        // @BindView(R.id.cbSports) CheckBox cbSports;
-        cbArts = (CheckBox) findViewById(R.id.cbArts);
-        // @BindView(R.id.cbArts) CheckBox cbArts;
-        cbFashionandStyle = (CheckBox) findViewById(R.id.cbFashionandStyle);
-        // @BindView(R.id.cbFashionandStyle) CheckBox cbFashionandStyle;
-        btnFilter = (Button) findViewById(R.id.btnFilter);
-        // @BindView(R.id.btnFilter) Button btnFilter;
-    } */
 
     public void showDatePickerDialog(View v) {
         DatePickerFragment newFragment = new DatePickerFragment();
@@ -188,6 +196,10 @@ public class FilterActivity extends AppCompatActivity implements DatePickerDialo
         viewDate = month + "/" + day + "/" + String.valueOf(year);
         ////////////
 
+        setDates();
+
+    }
+    public void setDates() {
         if(filter.begin) {
             // place viewDate string into etBeginDate
             filter.begin_date = date;
@@ -199,7 +211,6 @@ public class FilterActivity extends AppCompatActivity implements DatePickerDialo
             etEndDate.setText(viewDate);
 
         }
-
     }
 
 }

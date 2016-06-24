@@ -25,14 +25,6 @@ public class Filter {
     private String EMPTY_STRING = "";
     public ArrayList<String> newsDeskItems = new ArrayList<>();
 
-    /*
-
-    String newsDeskItemsStr =
-            android.text.TextUtils.join(" ", newsDeskItems);
-    String newsDeskParamValue =
-            String.format("news_desk:(%s)", newsDeskItemsStr);
-    */
-
 
     public Filter() {
     }

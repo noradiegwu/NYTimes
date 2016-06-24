@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.ShareActionProvider;
+import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -13,6 +14,8 @@ import android.webkit.WebViewClient;
 
 import com.example.noradiegwu.nytsearchapplication.Models.Article;
 import com.example.noradiegwu.nytsearchapplication.R;
+
+import org.parceler.Parcels;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -25,8 +28,14 @@ public class ArticleActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         //Toolbar toolbar = (Toolbar) findViewById(R.id....)
         //setSupportActionBar(toolbar);
+        // Find the toolbar view inside the activity layout
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        // Sets the Toolbar to act as the ActionBar for this Activity window.
+        // Make sure the toolbar exists in the activity and is not null
+        setSupportActionBar(toolbar);
+
         setContentView(R.layout.activity_article);
-        Article article = (Article) getIntent().getSerializableExtra("article");
+        Article article = Parcels.unwrap(getIntent().getParcelableExtra("article"));
 
         //WebView webView = (WebView) findViewById(R.id.wvArticle);
 

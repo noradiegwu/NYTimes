@@ -3,11 +3,14 @@ package com.example.noradiegwu.nytsearchapplication.Models;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.parceler.Parcel;
 
-import java.io.Serializable;
 import java.util.ArrayList;
+@Parcel
+public class Article {
+    public Article() {
 
-public class Article implements Serializable {
+    }
 
     public String getWebUrl() {
         return webUrl;
@@ -25,19 +28,36 @@ public class Article implements Serializable {
     String headline;
     String thumbnail;
 
+
     public Article(JSONObject jsonObject) {
         try {
-            this.webUrl = jsonObject.getString("web_url");
-            this.headline = jsonObject.getJSONObject("headline").getString("main");
+            // if statements
+            if(jsonObject.has("headline")) { // if normal articlesearch api
+                this.webUrl = jsonObject.getString("web_url");
+                this.headline = jsonObject.getJSONObject("headline").getString("main");
 
 
-            JSONArray multimedia = jsonObject.getJSONArray("multimedia");
+                JSONArray multimedia = jsonObject.getJSONArray("multimedia");
+                if (multimedia.length() > 0) {
+                    JSONObject multimediaJson = multimedia.getJSONObject(0);
+                    this.thumbnail = "https://www.nytimes.com/" + multimediaJson.getString("url");
+                } else {
+                    this.thumbnail = "";
+                }
+            }
+            else { // else if top stories api
+                this.webUrl = jsonObject.getString("url");
+                this.headline = jsonObject.getString("title");
 
-            if (multimedia.length() > 0) {
-                JSONObject multimediaJson = multimedia.getJSONObject(0);
-                this.thumbnail = "https://www.nytimes.com/" + multimediaJson.getString("url");
-            } else {
-                this.thumbnail = "";
+                JSONArray multimedia = jsonObject.getJSONArray("multimedia");
+                if (multimedia.length() > 0) {
+                    JSONObject multimediaJson = multimedia.getJSONObject(0);
+                    this.thumbnail = multimediaJson.getString("url");
+                } else {
+                    this.thumbnail = "";
+                }
+
+
             }
 
         } catch (JSONException e) {
