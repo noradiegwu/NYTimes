@@ -12,7 +12,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Toast;
 
 import com.example.noradiegwu.nytsearchapplication.ArticlesRecyclerAdapter;
 import com.example.noradiegwu.nytsearchapplication.EndlessRecyclerViewScrollListener;
@@ -247,7 +246,6 @@ public class SearchActivity extends AppCompatActivity {
         if(resultCode == RESULT_OK) {
             // if it was the filter intent
             if (requestCode == FILTER_REQUEST_CODE) {
-                Toast.makeText(this, "You filtered!", Toast.LENGTH_SHORT).show();
 
                 // When the activity comes back, I want to "refresh" the whole screen and run query/client with filters set. So I should:
                 // 1. clear the adapter
