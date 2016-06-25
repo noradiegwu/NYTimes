@@ -10,11 +10,7 @@
             app:showAsAction="ifRoom|collapseActionView"
             app:actionViewClass="android.support.v7.widget.SearchView" />
 
-        <item
-            android:id="@+id/menu_item_share"
-            app:showAsAction="ifRoom"
-            android:title="Share"
-            app:actionProviderClass="android.support.v7.widget.ShareActionProvider" />
+
 
         <item
             android:id="@+id/menu_item_filter"

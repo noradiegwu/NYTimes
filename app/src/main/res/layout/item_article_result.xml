@@ -4,16 +4,18 @@
     android:layout_height="wrap_content">
 
     <ImageView
-        android:layout_width="75dp"
-        android:layout_height="75dp"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
         android:id="@+id/ivImage"
         android:src="@mipmap/ic_launcher"
-        android:scaleType="center" />
+        android:scaleType="centerCrop" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/tvTitle"
         android:ellipsize="end"
-        android:text="TextView" />
+        android:text="TextView"
+        android:layout_gravity="center"
+        android:textColor="#666666" />
 </LinearLayout>
