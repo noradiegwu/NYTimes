@@ -34,8 +34,6 @@ public class ArticlesRecyclerAdapter extends RecyclerView.Adapter<ArticlesRecycl
             tvTitle = (TextView) itemView.findViewById(R.id.tvTitle);
             ivImage = (ImageView) itemView.findViewById(R.id.ivImage);
 
-           // nameTextView = (TextView) itemView.findViewById(R.id.contact_name);
-           // messageButton = (Button) itemView.findViewById(R.id.message_button);
         }
     }
 
@@ -88,12 +86,10 @@ public class ArticlesRecyclerAdapter extends RecyclerView.Adapter<ArticlesRecycl
         String thumbnail = article.getThumbnail();
 
         if(!TextUtils.isEmpty(thumbnail)) {
-            Glide.with(getContext()).load(thumbnail).placeholder(R.mipmap.ic_news_ipad).into(ivImage);
+            Glide.with(getContext()).load(thumbnail).placeholder(R.drawable.ic_nyt_load).into(ivImage);
         } else {
-            Glide.with(getContext()).load(R.drawable.newspaper).into(ivImage);
+            Glide.with(getContext()).load(R.drawable.ic_nyt_load).into(ivImage);
         }
-
-
 
     }
 

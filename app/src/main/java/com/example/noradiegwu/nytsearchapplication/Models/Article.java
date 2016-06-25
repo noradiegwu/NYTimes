@@ -38,8 +38,8 @@ public class Article {
 
 
                 JSONArray multimedia = jsonObject.getJSONArray("multimedia");
-                if (multimedia.length() > 0) {
-                    JSONObject multimediaJson = multimedia.getJSONObject(0);
+                if (multimedia.length() > 1) {
+                    JSONObject multimediaJson = multimedia.getJSONObject(1);
                     this.thumbnail = "https://www.nytimes.com/" + multimediaJson.getString("url");
                 } else {
                     this.thumbnail = "";
@@ -50,8 +50,8 @@ public class Article {
                 this.headline = jsonObject.getString("title");
 
                 JSONArray multimedia = jsonObject.getJSONArray("multimedia");
-                if (multimedia.length() > 0) {
-                    JSONObject multimediaJson = multimedia.getJSONObject(0);
+                if (multimedia.length() > 1) {
+                    JSONObject multimediaJson = multimedia.getJSONObject(1);
                     this.thumbnail = multimediaJson.getString("url");
                 } else {
                     this.thumbnail = "";

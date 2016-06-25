@@ -71,6 +71,7 @@ public class FilterActivity extends AppCompatActivity implements DatePickerDialo
             rbtnOldest.toggle();
         }
 
+
         // Sort click listeners
         rbtnNewest.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -165,7 +166,6 @@ public class FilterActivity extends AppCompatActivity implements DatePickerDialo
         });
 
     }
-
 
     public void showDatePickerDialog(View v) {
         DatePickerFragment newFragment = new DatePickerFragment();

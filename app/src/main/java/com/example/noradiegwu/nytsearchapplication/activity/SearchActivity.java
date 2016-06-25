@@ -37,8 +37,6 @@ public class SearchActivity extends AppCompatActivity {
 
     String queryText;
     int offsetNum;
-    //GridView gvResults;
-    //@BindView(R.id.gvResults) GridView gvResults;
     int FILTER_REQUEST_CODE = 155;
     //private Filter filtered;
     private Filter filter = new Filter();
@@ -53,7 +51,6 @@ public class SearchActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search);
-        //ButterKnife.bind(this);
 
         RequestParams params = createRequestParams(null, filter, 0);
 
@@ -66,8 +63,6 @@ public class SearchActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         articles = new ArrayList<>();
-        //adapter = new ArticleArrayAdapter(this, articles);
-        //gvResults.setAdapter(adapter);
 
         ////////////////////////
         RecyclerView rvArticles = (RecyclerView) findViewById(R.id.rvArticles); // why is this null?
@@ -76,51 +71,17 @@ public class SearchActivity extends AppCompatActivity {
         adapter = new ArticlesRecyclerAdapter(this, articles);
         // Initialize articles
 
-        AsyncHttpClient client = new AsyncHttpClient();
-        String topURL = "https://api.nytimes.com/svc/topstories/v2/home.json";
-
-        params.put("api-key", "e9eaa94eab9b4156ab10c4acdaf1780c");
-
-        // different url for top stories
-        // if query is null, use top stories url
-        // else, clear top stories and use query
-
-        client.get(topURL, params, new JsonHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
-                JSONArray articleJsonResults = null;
-
-                try {
-                    articleJsonResults = response.getJSONArray("results");
-                    articles.addAll(Article.fromJSONArray(articleJsonResults));
-                    adapter.notifyDataSetChanged();
-                    // by doing adapter.addAll you still modify the underlying data and adds it to the array list
-                    // you simply save a step by not having to notify the adapter
-                    // adapter.notifyDataSetChanged();
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+        fetchTopStories(params);
 
 
         // Attach the adapter to the recyclerview to populate items
         rvArticles.setAdapter(adapter);
         // First param is number of columns and second param is orientation i.e Vertical or Horizontal
         StaggeredGridLayoutManager gridLayoutManager =
-                new StaggeredGridLayoutManager(4, StaggeredGridLayoutManager.VERTICAL);
-// Attach the layout manager to the recycler view
+                new StaggeredGridLayoutManager(3, StaggeredGridLayoutManager.VERTICAL);
+        // Attach the layout manager to the recycler view
         rvArticles.setLayoutManager(gridLayoutManager);
 
-        //rvArticles.setLayoutManager(new LinearLayoutManager(this)); // change to staggered grid
-
-        //////////////////////////
-
-        //setUpViews();
-
-
-        //////////////////////////////
         // click support
 
         ItemClickSupport.addTo(rvArticles).setOnItemClickListener(new ItemClickSupport.OnItemClickListener() {
@@ -143,46 +104,13 @@ public class SearchActivity extends AppCompatActivity {
             public void onLoadMore(int page, int totalItemsCount) {
                 // Triggered only when new data needs to be appended to the list
                 // Add whatever code is needed to append new items to the bottom of the list
-                customLoadMoreDataFromApi(page);
+                if(queryText != null) {
+                    customLoadMoreDataFromApi(page);
+                }
             }
         });
     }
         ////////////////////////////
-
-
-
-
-
-        // hook up listener for grid click
-        /* gvResults.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                // create an intent to display the article
-                Intent intent = new Intent(getApplicationContext(), ArticleActivity.class);
-                // get the article I want to display
-                Article article = articles.get(position);
-                // pass in the article to the intent
-                intent.putExtra("article", Parcels.wrap(article));
-                // launch article activity
-                startActivity(intent);
-            }
-        }); */
-
-        // hook up listener for scrolls
-        /* gvResults.setOnScrollListener(new EndlessScrollListener() {
-            @Override
-            public boolean onLoadMore(int page, int totalItemsCount) {
-                // Triggered only when new data needs to be appended to the list
-                // Add whatever code is needed to append new items to your AdapterView
-                if(queryText != null) {
-                    customLoadMoreDataFromApi(page);
-                }
-                // or customLoadMoreDataFromApi(totalItemsCount);
-                return true; // ONLY if more data is actually being loaded; false otherwise.
-            }
-
-        });
-    }*/
 
     public void fetchTopStories(RequestParams params) {
         AsyncHttpClient client = new AsyncHttpClient();
@@ -203,9 +131,6 @@ public class SearchActivity extends AppCompatActivity {
                     articleJsonResults = response.getJSONArray("results");
                     articles.addAll(Article.fromJSONArray(articleJsonResults));
                     adapter.notifyDataSetChanged();
-                    // by doing adapter.addAll you still modify the underlying data and adds it to the array list
-                    // you simply save a step by not having to notify the adapter
-                    // adapter.notifyDataSetChanged();
 
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -234,9 +159,6 @@ public class SearchActivity extends AppCompatActivity {
                     articleJsonResults = response.getJSONObject("response").getJSONArray("docs");
                     articles.addAll(Article.fromJSONArray(articleJsonResults));
                     adapter.notifyDataSetChanged();
-                    // by doing adapter.addAll you still modify the underlying data and adds it to the array list
-                    // you simply save a step by not having to notify the adapter
-                    // adapter.notifyDataSetChanged();
 
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -262,20 +184,15 @@ public class SearchActivity extends AppCompatActivity {
                 // catch query string for use in later method
                 queryText = query;
 
-                //If I do not want to apply any filters from the beginning, I should simply call the default params on my query
-                // clear articles
+                // clear articles and notify adapter
                 articles.clear();
                 adapter.notifyDataSetChanged();
 
                 RequestParams params = createRequestParams(query, null, 0);
 
-                // filter params get applied in onactivityresult();
-
                 // fetch articles from client
                 fetchArticles(params);
 
-                // workaround to avoid issues with some emulators and keyboard devices firing twice if a keyboard enter is used
-                // see https://code.google.com/p/android/issues/detail?id=24599
                 searchView.clearFocus();
 
                 return true;
@@ -288,13 +205,6 @@ public class SearchActivity extends AppCompatActivity {
         });
         return super.onCreateOptionsMenu(menu);
     }
-
-
-    /* public void setUpViews() {
-        articles = new ArrayList<>();
-        adapter = new ArticleArrayAdapter(this, articles);
-        gvResults.setAdapter(adapter);
-    } */
 
 
     // Used for infinite scroll
@@ -314,9 +224,7 @@ public class SearchActivity extends AppCompatActivity {
         fetchArticles(params);
     }
 
-    //////////////////////////
-    ///////FILTERING/////////
-    ////////////////////////
+
 
     // set listener for filter icon click and open intent on click
     @Override
@@ -372,8 +280,6 @@ public class SearchActivity extends AppCompatActivity {
             params.put("q", query);
         }
 
-        // clear
-        //adapter.clear();
 
         if(filter != null) {
 
